@@ -1,12 +1,14 @@
-package com.example;
+package com.example.user_service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+
 
 @SpringBootApplication
 public class UserServiceApplication {
 
 	public static void main(String[] args) {
+		System.out.println("Environments: " + System.getenv());
 		SpringApplication.run(UserServiceApplication.class, args);
 	}
 
