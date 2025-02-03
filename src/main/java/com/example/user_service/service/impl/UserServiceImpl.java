@@ -1,7 +1,12 @@
 package com.example.user_service.service.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.user_service.dto.ApiResponse;
@@ -21,7 +26,8 @@ public class UserServiceImpl implements UserService {
             return ApiResponse.builder()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
                 .message("Account creation failed")
-                .error("Email already exists").build();
+                .error("Email already exists")
+            .build();
         }
 
         final User user = User.builder()
@@ -32,10 +38,27 @@ public class UserServiceImpl implements UserService {
             .verified(false)
         .build();
 
+        PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder(); // cerate password encoder delegate
+        user.setPassword(encoder.encode(request.getPassword())); // resave encoded password
+        // encoder.matches(null, null); // can be used to check for password correctness
+
+        repo.save(user);
+
         return ApiResponse.builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("Account created")
                 .error(null)
-                .data(user).build();
+                .data(user)
+            .build();
+    }
+
+    public ApiResponse getUsers() {
+        List<User> users = repo.findAll(); // get all users from db
+        return ApiResponse.builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Users fectched")
+                .error(null)
+                .data(users)
+            .build();
     }
 }
