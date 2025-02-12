@@ -7,6 +7,8 @@ import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -46,12 +48,14 @@ public class User implements Serializable{
     private Boolean active;
 
     @CreationTimestamp
+    @JsonIgnore
     private LocalDateTime creationDate;
 
     @UpdateTimestamp
+    @JsonIgnore
     private LocalDateTime modifiedDate;
 
-    public String getFulName() {
+    public String getFullName() {
         return firstName + " " + lastName;
     }
 }

@@ -1,10 +1,12 @@
 package com.example.user_service.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 
 import com.example.user_service.dto.ApiResponse;
 import com.example.user_service.dto.CreateUserRequest;
-import com.example.user_service.service.UserService;
+import com.example.user_service.dto.LoginRequest;
+import com.example.user_service.service.impl.UserService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,5 +31,18 @@ public class UserController {
     public ApiResponse getUsers() {
         return userService.getUsers();
     }
-    
+
+    @GetMapping("/welcome")
+    public ApiResponse welcome() {
+        return ApiResponse.builder()
+            .statusCode(HttpStatus.OK.value())
+            .message("You're welcome")
+            .error(null)
+        .build();
+    }
+
+    @PostMapping("/login")
+    public ApiResponse login(@RequestBody LoginRequest request) {
+        return userService.login(request);
+    }    
 }
