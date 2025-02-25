@@ -2,6 +2,7 @@ package com.example.user_service.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import com.example.user_service.dto.ApiResponse;
 import com.example.user_service.dto.CreateUserRequest;
@@ -42,7 +43,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ApiResponse login(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse> login(@RequestBody LoginRequest request) {
         return userService.login(request);
     }    
 }

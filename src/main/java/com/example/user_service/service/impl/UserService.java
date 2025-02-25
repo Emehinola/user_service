@@ -6,7 +6,9 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,6 +25,7 @@ import com.example.user_service.model.User;
 import com.example.user_service.repository.UserRepo;
 import com.example.user_service.service.JwtService;
 import com.example.user_service.user.UserInfoDetails;
+import com.example.user_service.utils.ApiResponseUtil;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -98,31 +101,25 @@ public class UserService implements UserDetailsService {
             .build();
     }
 
-    public ApiResponse login(LoginRequest request) {
-        if (repo.existsByEmail(request.getEmail())) {
-            Optional<User> user = repo.findByEmail(request.getEmail());
-
-            // check if provided password matches the stored password
-            Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-            );
-
-            if (authentication.isAuthenticated()){
-                AuthResponse response = new AuthResponse(user.get(), jwtService.generateToken(user.get().getEmail()), null);
-                
-                return ApiResponse.builder()
-                    .statusCode(HttpStatus.OK.value())
-                    .message("Login successful!")
-                    .error(null)
-                    .data(response)
-                .build();
+    public ResponseEntity<ApiResponse> login(LoginRequest request) {
+        try{
+            if (repo.existsByEmail(request.getEmail())) {
+                Optional<User> user = repo.findByEmail(request.getEmail());
+    
+                // check if provided password matches the stored password
+                Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+                );
+    
+                if (authentication.isAuthenticated()){
+                    AuthResponse response = new AuthResponse(user.get(), jwtService.generateToken(user.get().getEmail()), null);
+                    
+                    return ApiResponseUtil.response(HttpStatus.OK, "Login successful!", null, response);
+                }
             }
+        }catch(BadCredentialsException e) {
+            return ApiResponseUtil.response(HttpStatus.UNAUTHORIZED, "Login failed", "Incorrect username or password", null);
         }
-        return ApiResponse.builder()
-                .statusCode(HttpStatus.BAD_REQUEST.value())
-                .message("Login failed!")
-                .error("Incorrect email or password")
-                .data(null)
-            .build();
+        return ApiResponseUtil.response(HttpStatus.UNAUTHORIZED, "Login failed", "Incorrect username or password", null);
     }
 }

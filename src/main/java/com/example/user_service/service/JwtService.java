@@ -5,16 +5,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.Base64;
 
 import javax.crypto.SecretKey;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Jwts.SIG;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -25,7 +26,8 @@ import com.example.user_service.repository.UserRepo;
 @Component
 public class JwtService {
 
-    private static final String SECRET = "5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437";
+    @Value("${jwt.secret}")
+    private String SECRET;
 
     @Autowired
     private UserRepo userRepo;
@@ -48,7 +50,7 @@ public class JwtService {
     }
 
     private SecretKey getSignKey() {
-        byte[] bytes = Decoders.BASE64.decode(SECRET);
+        byte[] bytes = Base64.getEncoder().encode(SECRET.getBytes());
         return Keys.hmacShaKeyFor(bytes);
     }
 
@@ -64,7 +66,7 @@ public class JwtService {
     
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
-            .decryptWith(getSignKey())
+            .verifyWith(getSignKey())
             .build()
             .parseSignedClaims(token)
             .getPayload();
