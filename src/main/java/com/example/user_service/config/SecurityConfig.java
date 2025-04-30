@@ -41,7 +41,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/swagger-ui/**", "/v3/api-docs*/**",
-                                "/api/user/welcome", "/api/user/login", "/api/user/create-account", "/api/login", "/api/logout"
+                                "/api/user/welcome", "/api/user/login", "/api/user/create-account", "/api/login", "/api/logout",
+                                "/api/user/refresh-token"
                     ).permitAll()
                 .requestMatchers("/api/admin/**").hasAnyAuthority("ROLE_ADMIN")
                 .anyRequest().authenticated() // only authenticated users can access other endpoints

@@ -5,12 +5,10 @@ import com.example.user_service.model.User;
 
 public class AuthResponse {
     public User user;
-    public String accessToken;
-    public String refreshToken;
+    public TokenResponse token;
 
-    public AuthResponse(User user, String accessToken, String refreshToken) {
+    public AuthResponse(User user, TokenResponse token) {
         this.user = user;
-        this.accessToken = accessToken;
-        this.refreshToken = refreshToken;
+        this.token = token;
     }
 }

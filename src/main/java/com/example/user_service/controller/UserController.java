@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 
 
@@ -45,5 +47,11 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse> login(@RequestBody LoginRequest request) {
         return userService.login(request);
-    }    
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<ApiResponse> getMethodName(@RequestBody String refreshToken) {
+        return userService.refreshToken(refreshToken);
+    }
+    
 }

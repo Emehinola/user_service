@@ -24,6 +24,7 @@ import com.example.user_service.dto.LoginRequest;
 import com.example.user_service.model.User;
 import com.example.user_service.repository.UserRepo;
 import com.example.user_service.service.JwtService;
+import com.example.user_service.service.RefreshTokenService;
 import com.example.user_service.user.UserInfoDetails;
 import com.example.user_service.utils.ApiResponseUtil;
 
@@ -112,7 +113,8 @@ public class UserService implements UserDetailsService {
                 );
     
                 if (authentication.isAuthenticated()){
-                    AuthResponse response = new AuthResponse(user.get(), jwtService.generateToken(user.get().getEmail()), null);
+                    final String email = user.get().getEmail();
+                    AuthResponse response = new AuthResponse(user.get(), jwtService.generateToken(email));
                     
                     return ApiResponseUtil.response(HttpStatus.OK, "Login successful!", null, response);
                 }
@@ -121,5 +123,9 @@ public class UserService implements UserDetailsService {
             return ApiResponseUtil.response(HttpStatus.UNAUTHORIZED, "Login failed", "Incorrect username or password", null);
         }
         return ApiResponseUtil.response(HttpStatus.UNAUTHORIZED, "Login failed", "Incorrect username or password", null);
+    }
+
+    public ResponseEntity<ApiResponse> refreshToken(String refreshToken) {
+        return ApiResponseUtil.response(HttpStatus.OK, "Token refreshed successfully", null, jwtService.refreshToken(refreshToken));
     }
 }

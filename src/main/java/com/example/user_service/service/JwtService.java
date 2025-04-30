@@ -5,7 +5,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.time.Instant;
 import java.util.Base64;
+import java.time.Duration;
 
 import javax.crypto.SecretKey;
 
@@ -20,8 +22,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import com.example.user_service.dto.MessageResponse;
+import com.example.user_service.dto.TokenResponse;
 import com.example.user_service.model.User;
 import com.example.user_service.repository.UserRepo;
+
+
 
 @Component
 public class JwtService {
@@ -29,22 +34,42 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String SECRET;
 
+    @Value("${custom.ACCESS_TOKEN_HOURS}")
+    private static int ACCESS_TOKEN_HOURS;
+
+    @Value("${custom.ROTATE_REFRESH_TOKEN}")
+    private Boolean ROTATE_REFRESH_TOKEN;
+
+    private static final Duration ACCESS_TOKEN_VALIDITY = Duration.ofHours(ACCESS_TOKEN_HOURS);
+
+
     @Autowired
     private UserRepo userRepo;
 
-    public String generateToken(String email) {
+    @Autowired
+    private RefreshTokenService refreshTokenService;
+
+    public TokenResponse generateToken(String email) {
         Map<String, Object> claims = new HashMap<String, Object>();
-        return createToken(claims, email);
+        TokenResponse response = new TokenResponse(createAccessToken(claims, email), refreshTokenService.generateRefreshToken(email, ROTATE_REFRESH_TOKEN).get());
+        return response;
     }
 
+    public TokenResponse refreshToken(String refreshToken) {
+        Map<String, Object> claims = new HashMap<String, Object>();
+        String newRefreshToken = refreshTokenService.refreshExistingToken(refreshToken, ROTATE_REFRESH_TOKEN);
 
-    private String createToken(Map<String, Object> claims, String email) {
+        TokenResponse response = new TokenResponse(createAccessToken(claims, refreshTokenService.getUser(newRefreshToken).getEmail()), newRefreshToken);
+        return response;
+    }
+
+    private String createAccessToken(Map<String, Object> claims, String email) {
         return Jwts.builder()
             .claims(claims)
             .subject(email)
             .issuedAt(new Date())
             .issuer(email)
-            .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30)) // 30 mins expiration
+            .expiration(Date.from(Instant.now().plus(ACCESS_TOKEN_VALIDITY))) // 30 mins expiration
             .signWith(getSignKey(), SIG.HS256)
         .compact();
     }

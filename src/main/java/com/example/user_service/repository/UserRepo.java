@@ -12,6 +12,7 @@ import com.example.user_service.model.User;
 @Repository
 public interface UserRepo extends JpaRepository<User, UUID> {
     Boolean existsByEmail(String email);
+    @SuppressWarnings("null")
     List<User> findAll();
     Optional<User> findByEmail(String email);
 }

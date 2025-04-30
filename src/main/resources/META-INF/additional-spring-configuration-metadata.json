@@ -1,5 +1,22 @@
-{"properties": [{
-  "name": "jwt.secret",
-  "type": "java.lang.String",
-  "description": "A description for 'jwt.secret'"
-}]}
+{"properties": [
+  {
+    "name": "jwt.secret",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.secret'"
+  },
+  {
+    "name": "custom.ROTATE_REFRESH_TOKEN",
+    "type": "java.lang.String",
+    "description": "A description for 'custom.ROTATE_REFRESH_TOKEN'"
+  },
+  {
+    "name": "custom.REFRESH_TOKEN_DAYS",
+    "type": "java.lang.String",
+    "description": "A description for 'custom.REFRESH_TOKEN_DAYS'"
+  },
+  {
+    "name": "custom.ACCESS_TOKEN_HOURS",
+    "type": "java.lang.String",
+    "description": "A description for 'custom.ACCESS_TOKEN_HOURS'"
+  }
+]}
