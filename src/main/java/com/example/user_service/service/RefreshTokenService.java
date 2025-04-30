@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.example.user_service.controller.AdminController;
+import com.example.user_service.exceptions.BadRequestException;
 import com.example.user_service.model.RefreshToken;
 import com.example.user_service.model.User;
 import com.example.user_service.repository.RefreshTokenRepo;
@@ -45,26 +46,22 @@ public class RefreshTokenService {
 
     public String refreshExistingToken(String refreshToken, Boolean rotateToken) {
 
-        final Optional<RefreshToken> tokenObj = refreshTokenRepo.findByToken(refreshToken);
-        if (tokenObj == null) {
-            // TODO: raise exception: invalid refresh token
-            return null;
+        final RefreshToken tokenObj = refreshTokenRepo.findByToken(refreshToken).orElse(null);
+
+        if ( tokenObj == null ) {
+            throw new BadRequestException("Invalid token supplied");
         }
         
-        if (tokenObj.get().getExpirationTime().isBefore(OffsetDateTime.now())) {
-            System.out.println("Is Expired");
-            // expired
-            // TODO: raise exception invalid refresh token
+        if (tokenObj.getExpirationTime().isBefore(OffsetDateTime.now())) {
+            throw new BadRequestException("Token invalid or expired. Please re-login");
         }
         else {
             if (rotateToken) {
-                return saveToken(tokenObj.get().getUser()).getToken();
+                return saveToken(tokenObj.getUser()).getToken();
             } else {
-                return tokenObj.get().getToken(); // return existing token
+                return tokenObj.getToken(); // return existing token
             }
         }
-        
-        return null;
     }
 
     private RefreshToken saveToken(User user) {
