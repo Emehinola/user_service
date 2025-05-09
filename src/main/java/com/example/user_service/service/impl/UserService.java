@@ -14,19 +14,24 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.user_service.dto.ApiResponse;
 import com.example.user_service.dto.AuthResponse;
+import com.example.user_service.dto.ChangePasswordRequest;
 import com.example.user_service.dto.CreateUserRequest;
 import com.example.user_service.dto.LoginRequest;
+import com.example.user_service.exceptions.BadRequestException;
+import com.example.user_service.exceptions.UnauthorizedException;
 import com.example.user_service.model.User;
 import com.example.user_service.repository.UserRepo;
 import com.example.user_service.service.JwtService;
-import com.example.user_service.service.RefreshTokenService;
 import com.example.user_service.user.UserInfoDetails;
 import com.example.user_service.utils.ApiResponseUtil;
+
+import jakarta.annotation.Nullable;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -61,6 +66,26 @@ public class UserService implements UserDetailsService {
         );
     }
 
+    @Nullable
+    public User getCurrentUser() {
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UnauthorizedException("User not authenticated");
+        }
+    
+        Object principal = authentication.getPrincipal();
+
+        if (!(principal instanceof UserDetails)) {
+            throw new UnauthorizedException("User not authenticated");
+        }
+    
+        final String username = ((UserDetails) principal).getUsername();
+        return repo.findByEmail(username)
+                   .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
+    }
+    
+
     public ApiResponse createUser(CreateUserRequest request) {
         if (repo.existsByEmail(request.getEmail())){
             return ApiResponse.builder()
@@ -78,7 +103,7 @@ public class UserService implements UserDetailsService {
             .verified(false)
         .build();
 
-        // PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder(); // cerate password encoder delegate
+        // PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder(); // create password encoder delegate
         user.setPassword(encoder.encode(request.getPassword())); // resave encoded password
         // encoder.matches(null, null); // can be used to check for password correctness
 
@@ -127,5 +152,21 @@ public class UserService implements UserDetailsService {
 
     public ResponseEntity<ApiResponse> refreshToken(String refreshToken) {
         return ApiResponseUtil.response(HttpStatus.OK, "Token refreshed successfully", null, jwtService.refreshToken(refreshToken));
+    }
+
+    public ResponseEntity<ApiResponse> changePassword(ChangePasswordRequest request) {
+        final User user = getCurrentUser();
+
+        if (user != null) {
+            if (request.getOldPassword() != encoder.encode(user.getPassword())) {
+                throw new BadRequestException("Incorrect old password");
+            }else{
+                user.setPassword(request.getNewPassword()); // set new password for user
+                repo.save(user); // save the new password
+
+                return ApiResponseUtil.response(HttpStatus.OK, "Password changed successfully", null, null);
+            }
+        }
+        throw new BadRequestException("Password changed failed. Try again");
     }
 }

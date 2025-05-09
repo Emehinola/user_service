@@ -35,12 +35,10 @@ public class JwtService {
     private String SECRET;
 
     @Value("${custom.ACCESS_TOKEN_HOURS}")
-    private static int ACCESS_TOKEN_HOURS;
+    private int ACCESS_TOKEN_HOURS;
 
     @Value("${custom.ROTATE_REFRESH_TOKEN}")
     private Boolean ROTATE_REFRESH_TOKEN;
-
-    private static final Duration ACCESS_TOKEN_VALIDITY = Duration.ofHours(ACCESS_TOKEN_HOURS);
 
 
     @Autowired
@@ -69,7 +67,7 @@ public class JwtService {
             .subject(email)
             .issuedAt(new Date())
             .issuer(email)
-            .expiration(Date.from(Instant.now().plus(ACCESS_TOKEN_VALIDITY))) // 30 mins expiration
+            .expiration(Date.from(Instant.now().plus(Duration.ofHours(ACCESS_TOKEN_HOURS))))
             .signWith(getSignKey(), SIG.HS256)
         .compact();
     }

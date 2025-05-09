@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.example.user_service.dto.ApiResponse;
+import com.example.user_service.dto.ChangePasswordRequest;
 import com.example.user_service.dto.CreateUserRequest;
 import com.example.user_service.dto.LoginRequest;
 import com.example.user_service.service.impl.UserService;
@@ -13,9 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
-
 
 
 @RestController
@@ -54,4 +52,9 @@ public class UserController {
         return userService.refreshToken(refreshToken);
     }
     
+
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse> changePassword(@RequestBody ChangePasswordRequest request) {
+        return userService.changePassword(request);
+    }
 }
