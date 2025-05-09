@@ -158,13 +158,13 @@ public class UserService implements UserDetailsService {
         final User user = getCurrentUser();
 
         if (user != null) {
-            if (request.getOldPassword() != encoder.encode(user.getPassword())) {
-                throw new BadRequestException("Incorrect old password");
-            }else{
-                user.setPassword(request.getNewPassword()); // set new password for user
+            if (encoder.matches(request.getOldPassword(), user.getPassword())) {
+                user.setPassword(encoder.encode(request.getNewPassword())); // set new password for user
                 repo.save(user); // save the new password
 
                 return ApiResponseUtil.response(HttpStatus.OK, "Password changed successfully", null, null);
+            } else{
+                throw new BadRequestException("Incorrect old password");
             }
         }
         throw new BadRequestException("Password changed failed. Try again");
