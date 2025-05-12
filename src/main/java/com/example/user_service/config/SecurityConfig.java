@@ -20,6 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.example.user_service.filter.JwtAuthFilter;
 import com.example.user_service.service.impl.UserService;
+import com.example.user_service.utils.EndpointUtil;
 
 @Configuration
 @EnableWebSecurity
@@ -28,6 +29,9 @@ public class SecurityConfig {
     
     @Autowired
     private JwtAuthFilter jwtAuthFilter;
+
+    @Autowired
+    private EndpointUtil endpointUtil;
 
     @Bean
     UserDetailsService userDetailsService() {
@@ -39,11 +43,7 @@ public class SecurityConfig {
         httpSecurity
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/swagger-ui/**", "/v3/api-docs*/**",
-                                "/api/user/welcome", "/api/user/login", "/api/user/create-account", "/api/user/login", "/api/user/logout",
-                                "/api/user/refresh-token", "/api/user/change-password"
-                    ).permitAll()
+                .requestMatchers(endpointUtil.getPublicEndpoints().toArray(new String[0])).permitAll()
                 .requestMatchers("/api/admin/**").hasAnyAuthority("ROLE_ADMIN")
                 .anyRequest().authenticated() // only authenticated users can access other endpoints
             )

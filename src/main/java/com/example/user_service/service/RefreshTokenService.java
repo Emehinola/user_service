@@ -8,7 +8,6 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import com.example.user_service.controller.AdminController;
 import com.example.user_service.exceptions.BadRequestException;
 import com.example.user_service.model.RefreshToken;
 import com.example.user_service.model.User;
@@ -17,8 +16,6 @@ import com.example.user_service.repository.UserRepo;
 
 @Service
 public class RefreshTokenService {
-
-    private final AdminController adminController;
     
     @Value("${custom.ROTATE_REFRESH_TOKEN}")
     private static int REFRESH_TOKEN_DAYS;
@@ -30,10 +27,6 @@ public class RefreshTokenService {
 
     @Autowired
     private RefreshTokenRepo refreshTokenRepo;
-
-    RefreshTokenService(AdminController adminController) {
-        this.adminController = adminController;
-    }
 
     public Optional<String> generateRefreshToken(String email, Boolean rotateToken) {
         final Optional<User> user = repo.findByEmail(email);

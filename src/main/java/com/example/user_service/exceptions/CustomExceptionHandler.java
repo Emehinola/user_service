@@ -22,6 +22,12 @@ public class CustomExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ApiResponse> handleAunauthoorizedException(UnauthorizedException ex) {
+        ApiResponse errorResponse = new ApiResponse(HttpStatus.UNAUTHORIZED.value(), ex.getMessage(), ex.getMessage(), null);
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse> handleGeneralException(Exception ex) {
         ApiResponse errorResponse = new ApiResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Something went wrong. Our engineers are on it 🔧", "Internal server error", null);

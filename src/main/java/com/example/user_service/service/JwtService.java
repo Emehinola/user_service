@@ -12,14 +12,15 @@ import java.time.Duration;
 import javax.crypto.SecretKey;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Jwts.SIG;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import com.example.user_service.dto.MessageResponse;
 import com.example.user_service.dto.TokenResponse;
@@ -28,7 +29,7 @@ import com.example.user_service.repository.UserRepo;
 
 
 
-@Component
+@Service
 public class JwtService {
 
     @Value("${jwt.secret}")
@@ -77,37 +78,53 @@ public class JwtService {
         return Keys.hmacShaKeyFor(bytes);
     }
 
-    public Optional<User> getUser(String token) {
-        final String email = extractClaim(token, Claims::getSubject); // the subject was set as email in the previous method
-        return userRepo.findByEmail(email);
+    public Optional<User> getUser(String token, HttpServletResponse response) throws ExpiredJwtException {
+        try {
+            final String email = extractClaim(token, Claims::getSubject, response); // the subject was set as email in the previous method
+            return userRepo.findByEmail(email);
+        } catch (ExpiredJwtException e) {
+            throw e;
+        }
     }
 
-    private <T> T extractClaim(String token, Function<Claims, T> claimsResolvers) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolvers.apply(claims);
+    private <T> T extractClaim(String token, Function<Claims, T> claimsResolvers, HttpServletResponse response) throws ExpiredJwtException {
+        try {
+            final Claims claims = extractAllClaims(token);
+            return claimsResolvers.apply(claims);
+        } catch (ExpiredJwtException e) {
+            throw e;
+        }
     }
     
-    private Claims extractAllClaims(String token) {
-        return Jwts.parser()
-            .verifyWith(getSignKey())
-            .build()
-            .parseSignedClaims(token)
-            .getPayload();
+    private Claims extractAllClaims(String token) throws ExpiredJwtException {
+            try {
+                return Jwts.parser()
+                    .verifyWith(getSignKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+            } catch( ExpiredJwtException e) {
+                throw e;
+            }
     }
 
-    private Boolean isTokenExpired(String token) {
-        return extractClaim(token, Claims::getExpiration).before(new Date());
-    }
-
-    public MessageResponse validateToken(String token, UserDetails userDetails) {
+    private Boolean isTokenExpired(String token, HttpServletResponse response) throws ExpiredJwtException {
         try {
-            if(!isTokenExpired(token)) {
+            Boolean expired = extractClaim(token, Claims::getExpiration, response).before(new Date());
+            return expired;
+        } catch (ExpiredJwtException e) {
+            throw e;
+        }
+    }
+
+    public MessageResponse validateToken(String token, HttpServletResponse response) throws ExpiredJwtException {
+        try {
+            if(!isTokenExpired(token, response)) {
                 return new MessageResponse(true, "Token valid");
             }
-        } catch(Exception e) {
-            return new MessageResponse(false, e.toString());
+        } catch(ExpiredJwtException e) {
+            throw e; 
         }
-
-        return new MessageResponse(false, "Token invalid or expired"); 
+        return new MessageResponse(false, "Token invalid or expired");
     }
 }

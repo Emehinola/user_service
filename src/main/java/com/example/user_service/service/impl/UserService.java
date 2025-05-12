@@ -24,7 +24,6 @@ import com.example.user_service.dto.ChangePasswordRequest;
 import com.example.user_service.dto.CreateUserRequest;
 import com.example.user_service.dto.LoginRequest;
 import com.example.user_service.exceptions.BadRequestException;
-import com.example.user_service.exceptions.UnauthorizedException;
 import com.example.user_service.model.User;
 import com.example.user_service.repository.UserRepo;
 import com.example.user_service.service.JwtService;
@@ -71,18 +70,18 @@ public class UserService implements UserDetailsService {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new UnauthorizedException("User not authenticated");
+            return null;
         }
     
         Object principal = authentication.getPrincipal();
 
         if (!(principal instanceof UserDetails)) {
-            throw new UnauthorizedException("User not authenticated");
+            return null;
         }
     
         final String username = ((UserDetails) principal).getUsername();
         return repo.findByEmail(username)
-                   .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
+                   .orElse(null);
     }
     
 
@@ -167,6 +166,6 @@ public class UserService implements UserDetailsService {
                 throw new BadRequestException("Incorrect old password");
             }
         }
-        throw new BadRequestException("Password changed failed. Try again");
+        throw new BadRequestException("Password change failed. Try again");
     }
 }
